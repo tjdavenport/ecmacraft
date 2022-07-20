@@ -21,16 +21,18 @@ const makeApp = () => {
 test('server routers', async t => {
   await t.test('defines endpoints for system operations', async () => {
     const fetchSystem = (uri = '', opts = {}) => fetch(`http://localhost:1337/system${uri}`, opts);
+    const buildUri = '%2Fversions%2F1.19%2Fbuilds%2F68%2Fpaper-1.19-68.jar';
     const app = makeApp();
 
     app.use(systemRouter);
     fs.mkdirSync(path.join(fixturesDir, 'papermc'));
 
+
     const afterListen = async () => {
       await fetchSystem('/status')
         .then(res => res.json())
         .then(system => assert(system.papermcDownloaded === false));
-      await fetchSystem('/install/1.18.1/215', {method: 'POST'});
+      await fetchSystem(`/install?uri=${buildUri}`, {method: 'POST'});
       await fetchSystem('/status')
         .then(res => res.json())
         .then(system => {

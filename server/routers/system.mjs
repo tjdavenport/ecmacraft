@@ -4,10 +4,9 @@ import fsp from 'fs/promises';
 import express from 'express';
 import config from '../config.mjs';
 import handler from './handler.mjs';
-import {pipeline} from 'stream/promises';
+import {downloadPaper} from '../papermc.mjs';
 
 const router = express.Router();
-const fetchPaper = (uri = '') => fetch(`https://papermc.io/api/v2/projects/paper${uri}`);
 
 router.get('/system/status', handler(async (req, res, next) => {
   const status = {};
@@ -35,7 +34,7 @@ router.post('/system/eula', handler(async (req, res, next) => {
   return res.json({success: true});
 }));
 
-router.post('/system/install/:version/:buildNum', handler(async (req, res, next) => {
+router.post('/system/install', handler(async (req, res, next) => {
   try {
     await fsp.stat(path.join(config.PAPERMC_DIR, 'papermc.jar'))
     await fsp.rm(path.join(config.PAPERMC_DIR, 'papermc.jar'));
@@ -45,14 +44,7 @@ router.post('/system/install/:version/:buildNum', handler(async (req, res, next)
     }
   }
 
-  const buildRes = await fetchPaper(`/versions/${req.params.version}/builds/${req.params.buildNum}`);
-  const build = await buildRes.json();
-
-  await pipeline(
-    (await fetchPaper(`/versions/${req.params.version}/builds/${req.params.buildNum}/downloads/${build.downloads.application.name}`)).body,
-    fs.createWriteStream(path.join(config.PAPERMC_DIR, 'papermc.jar'))
-  );
-
+  await downloadPaper(req.query.uri, path.join(config.PAPERMC_DIR, 'papermc.jar'));
   return res.json({success: true});
 }));
 
