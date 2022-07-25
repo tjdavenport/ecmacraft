@@ -35,7 +35,6 @@ test('server routers', async t => {
       await fetchSystem('/status')
         .then(res => res.json())
         .then(system => {
-          console.info(system);
           assert(system.jarMatch.toString() === [
             'paper-1.19-68.jar', '1.19', '68'
           ].toString());

@@ -36,8 +36,12 @@ router.post('/system/eula', handler(async (req, res, next) => {
 
 router.post('/system/install', handler(async (req, res, next) => {
   try {
-    await fsp.stat(path.join(config.PAPERMC_DIR, 'papermc.jar'))
-    await fsp.rm(path.join(config.PAPERMC_DIR, 'papermc.jar'));
+    const filenames = await fsp.readdir(config.PAPERMC_DIR);
+    const existingJarName = filenames.find(name => name.match(jargex));
+
+    if (existingJarName) {
+      await fsp.rm(path.join(config.PAPERMC_DIR, existingJarName));
+    }
   } catch (error) {
     if (error.code !== 'ENOENT') {
       return next(error);
