@@ -4,17 +4,17 @@ import fsp from 'fs/promises';
 import express from 'express';
 import config from '../config.mjs';
 import handler from './handler.mjs';
-import {downloadPaper} from '../papermc.mjs';
+import {downloadPaper, jargex} from '../papermc.mjs';
 
 const router = express.Router();
 
 router.get('/system/status', handler(async (req, res, next) => {
-  const status = {};
-  const files = await fsp.readdir(config.PAPERMC_DIR);
+  const filenames = await fsp.readdir(config.PAPERMC_DIR);
+  const jarName = filenames.find(name => name.match(jargex));
 
   return res.json({
-    papermcDownloaded: files.includes('papermc.jar'),
-    eulaAgreed: files.includes('eula.txt'),
+    eulaAgreed: filenames.includes('eula.txt'),
+    jarMatch: jarName?.match(jargex),
   });
 }));
 
@@ -44,7 +44,8 @@ router.post('/system/install', handler(async (req, res, next) => {
     }
   }
 
-  await downloadPaper(req.query.uri, path.join(config.PAPERMC_DIR, 'papermc.jar'));
+  const [jarName] = req.query.uri.match(jargex);
+  await downloadPaper(req.query.uri, path.join(config.PAPERMC_DIR, jarName));
   return res.json({success: true});
 }));
 

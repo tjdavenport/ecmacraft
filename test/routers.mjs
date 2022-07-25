@@ -27,23 +27,27 @@ test('server routers', async t => {
     app.use(systemRouter);
     fs.mkdirSync(path.join(fixturesDir, 'papermc'));
 
-
     const afterListen = async () => {
       await fetchSystem('/status')
         .then(res => res.json())
-        .then(system => assert(system.papermcDownloaded === false));
+        .then(system => assert(!system.jarMatch));
       await fetchSystem(`/install?uri=${buildUri}`, {method: 'POST'});
       await fetchSystem('/status')
         .then(res => res.json())
         .then(system => {
-          assert(system.papermcDownloaded === true);
+          console.info(system);
+          assert(system.jarMatch.toString() === [
+            'paper-1.19-68.jar', '1.19', '68'
+          ].toString());
           assert(system.eulaAgreed === false);
         });
       await fetchSystem('/eula', {method: 'POST'});
       await fetchSystem('/status')
         .then(res => res.json())
         .then(system => {
-          assert(system.papermcDownloaded === true);
+          assert(system.jarMatch.toString() === [
+            'paper-1.19-68.jar', '1.19', '68'
+          ].toString());
           assert(system.eulaAgreed === true);
         });
 
@@ -51,8 +55,8 @@ test('server routers', async t => {
       server.close();
     };
 
+    // express will swallow a rejection here
     const server = app.listen(1337, afterListen);
-
     return afterListen;
   });
 });
