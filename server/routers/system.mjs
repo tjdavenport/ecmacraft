@@ -11,7 +11,6 @@ const system = ({
   const router = express.Router();
 
   router.get('/status', handler(async (req, res, next) => {
-    debugger;
     const filenames = await fsp.readdir(PAPERMC_DIR);
     const jarName = filenames.find(name => name.match(jargex));
 
